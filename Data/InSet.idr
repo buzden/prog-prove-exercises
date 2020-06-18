@@ -23,7 +23,7 @@ infixl 9 *, #
 --- Type itself ---
 -------------------
 
-export
+public export
 InSet : Type -> Type
 InSet a = a -> Bool
 
@@ -47,7 +47,7 @@ public export %inline
 Empty : InSet a
 Empty _ = False
 
-export
+public export
 Universe : InSet a
 Universe _ = True
 
@@ -57,7 +57,7 @@ export %inline
 Nil : InSet a
 Nil = Empty
 
-export
+public export
 (::) : Eq a => a -> InSet a -> InSet a
 (::) added parent x = if x == added then True else x `isin` parent
 
@@ -65,11 +65,11 @@ export
 --- Basic set relations ---
 ---------------------------
 
-export
+public export
 (==) : InSet a -> InSet a -> Type
 sa == sb = (x : a) -> x `isin` sa = x `isin` sb
 
-export
+public export
 (<=) : InSet a -> InSet a -> Type
 sa <= sb = (x : a) -> x `isin` sa = True -> x `isin` sb = True
 
