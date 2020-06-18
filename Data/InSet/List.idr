@@ -5,6 +5,8 @@ import Data.InSet
 import Data.List
 import Decidable.Equality
 
+%default total
+
 public export
 elems : Eq a => List a -> InSet a
 elems []      = []
