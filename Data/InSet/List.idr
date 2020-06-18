@@ -17,6 +17,7 @@ elems_of_concat (y::ys) zs x with (x == y)
   elems_of_concat (_::_)  _  _ | True  = Refl
   elems_of_concat (_::ys) zs x | False = elems_of_concat ys zs x
 
+-- This is better to be placed in `Data.List`.
 reverse_for_conc : (x : a) -> (xs : List a) -> reverse (x::xs) = reverse xs ++ [x]
 reverse_for_conc x []      = Refl
 reverse_for_conc x (y::ys) = rewrite reverse_for_conc y ys in
@@ -29,7 +30,7 @@ reverse_preserves_elems : Eq a => (xs : List a) -> elems (reverse xs) == elems x
 reverse_preserves_elems []      n = Refl
 reverse_preserves_elems (x::xs) n = rewrite reverse_for_conc x xs in
                                     rewrite elems_of_concat (reverse xs) [x] n in
-                                    rewrite union_commitative (elems (reverse xs)) (elems [x]) n in
+                                    rewrite union_commutative (elems (reverse xs)) (elems [x]) n in
                                     rewrite reverse_preserves_elems xs n in
                                     case decEq (n == x) True of
                                       Yes pnx => rewrite pnx in Refl

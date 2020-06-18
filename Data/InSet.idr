@@ -239,8 +239,8 @@ union_of_self : (s : InSet a) -> s + s == s
 union_of_self s x = rewrite orSameNeutral $ s x in Refl
 
 export
-union_commitative : (sa, sb : InSet a) -> sa + sb == sb + sa
-union_commitative sa sb x = rewrite orCommutative (sa x) (sb x) in Refl
+union_commutative : (sa, sb : InSet a) -> sa + sb == sb + sa
+union_commutative sa sb x = rewrite orCommutative (sa x) (sb x) in Refl
 
 export
 union_associative : (sa, sb, sc : InSet a) -> sa + (sb + sc) == (sa + sb) + sc
@@ -295,8 +295,8 @@ intersection_of_self : (s : InSet a) -> s # s == s
 intersection_of_self s x = rewrite andSameNeutral $ s x in Refl
 
 export
-intersection_commitative : (sa, sb : InSet a) -> sa # sb == sb # sa
-intersection_commitative sa sb x = rewrite andCommutative (sa x) (sb x) in Refl
+intersection_commutative : (sa, sb : InSet a) -> sa # sb == sb # sa
+intersection_commutative sa sb x = rewrite andCommutative (sa x) (sb x) in Refl
 
 export
 intersection_associative : (sa, sb, sc : InSet a) -> sa # (sb # sc) == (sa # sb) # sc
