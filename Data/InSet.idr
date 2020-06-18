@@ -142,6 +142,12 @@ eq_transitivity _ _ _ f g x = rewrite f x in
 --- Order laws of subset relation ---
 
 export
+subset_equal : (sa, sb : InSet a) -> sa == sb -> sa <= sb
+subset_equal sa sb f x prf = rewrite sym $ f x in
+                             rewrite prf in
+                             Refl
+
+export
 subset_reflexivity : (s : InSet a) -> s <= s
 subset_reflexivity _ _ = id
 
@@ -209,11 +215,24 @@ and_true_left_true True _ _ = Refl
 export
 subset_for_intersected_left : (sa, sb, sc : InSet a) -> sa <= sb -> (sa # sc) <= sb
 subset_for_intersected_left sa sb sc f x prf = f x $ and_true_left_true (sa x) (sc x) prf
-  where
 
 export
 subset_for_diffed_left : (sa, sb, sc : InSet a) -> sa <= sb -> (sa - sc) <= sb
 subset_for_diffed_left sa sb sc f x prf = f x $ and_true_left_true (sa x) (x `notin` sc) prf
+
+-- Particular cases for the properties from above, where `sb = sa`
+
+export
+subset_refl_unioned_right : (sa, sc : InSet a) -> sa <= sa + sc
+subset_refl_unioned_right sa sc = subset_for_unioned_right sa sa sc $ subset_reflexivity sa
+
+export
+subset_refl_intersected_left : (sa, sc : InSet a) -> (sa # sc) <= sa
+subset_refl_intersected_left sa sc = subset_for_intersected_left sa sa sc $ subset_reflexivity sa
+
+export
+subset_refl_diffed_left : (sa, sc : InSet a) -> (sa - sc) <= sa
+subset_refl_diffed_left sa sc = subset_for_diffed_left sa sa sc $ subset_reflexivity sa
 
 --- Subset with complement ---
 
