@@ -230,6 +230,22 @@ subset_of_complements_back sa sb f x prf = rewrite sym $ subset_of_complements (
                                            rewrite notInvolutive $ sb x in
                                            Refl
 
+----------------------
+--- Laws of append ---
+----------------------
+
+export
+append_cong : Eq a => {0 sa, sb : InSet a} -> (n : a) -> sa == sb -> n::sa == n::sb
+append_cong n f x with (x == n)
+  append_cong _ _ _ | True  = Refl
+  append_cong _ f x | False = rewrite f x in Refl
+
+export
+append_is_union : Eq a => (n : a) -> (s : InSet a) -> n::s == [n] + s
+append_is_union n _ x with (x == n)
+  append_is_union _ _ _ | True  = Refl
+  append_is_union _ _ _ | False = Refl
+
 ---------------------
 --- Laws of union ---
 ---------------------
