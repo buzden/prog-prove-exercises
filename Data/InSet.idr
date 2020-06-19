@@ -154,6 +154,11 @@ export
 non_empty_not_eq_empty : NotEmpty s -> Not (s == Empty)
 non_empty_not_eq_empty (x ** prf_t) prf_f = trueNotFalse $ rewrite sym prf_t in rewrite prf_f x in Refl
 
+export
+cant_in_and_not_in : (s : InSet a) -> (x : a) -> Not (x `isin` s = x `notin` s)
+cant_in_and_not_in s x prf with (s x)
+  cant_in_and_not_in _ _ Refl | True impossible
+
 --- Connection with external equality ---
 
 export
