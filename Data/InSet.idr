@@ -139,6 +139,19 @@ eq_transitivity f g x = rewrite f x in
 --   sa <= sb = (x : a) -> So (x `isin` sa) -> So (x `isin` sb)
 -- but this leads to constant using `soToEq` and `eqToSo` in proofs.
 
+--- Negative equality-related laws ---
+
+trueNotFalse : Not (True = False)
+trueNotFalse Refl impossible
+
+export
+non_empty_is_not_empty : NotEmpty s -> Not (s = Empty)
+non_empty_is_not_empty (x ** prf_t) prf_f = trueNotFalse $ rewrite sym prf_t in rewrite prf_f in Refl
+
+export
+non_empty_not_eq_empty : NotEmpty s -> Not (s == Empty)
+non_empty_not_eq_empty (x ** prf_t) prf_f = trueNotFalse $ rewrite sym prf_t in rewrite prf_f x in Refl
+
 --- Connection with external equality ---
 
 export
