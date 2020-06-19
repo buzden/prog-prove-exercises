@@ -185,13 +185,13 @@ subset_antisymmetry : {sa, sb : InSet a} -> sa <= sb -> sb <= sa -> sa == sb
 subset_antisymmetry f g x with (decEq (sa x) True)
   subset_antisymmetry f _ x | Yes pa with (decEq (sb x) True)
     subset_antisymmetry _ _ _ | Yes pa | Yes pb = rewrite pa in
-                                                      rewrite pb in
-                                                      Refl
+                                                  rewrite pb in
+                                                  Refl
     subset_antisymmetry f _ x | Yes pa | No nb = absurd . nb $ f x pa
   subset_antisymmetry _ g x | No pa with (decEq (sb x) True)
     subset_antisymmetry _ _ _ | No na | No nb = rewrite notTrueIsFalse na in
-                                                    rewrite notTrueIsFalse nb in
-                                                    Refl
+                                                rewrite notTrueIsFalse nb in
+                                                Refl
     subset_antisymmetry _ g x | No na | Yes pb = absurd . na $ g x pb
 
 export
