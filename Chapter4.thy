@@ -2,6 +2,8 @@ theory Chapter4
   imports Main
 begin
 
+(* Exercise 4.1 *)
+
 lemma assumes T: \<open>\<forall>x y. T x y \<or> T y x\<close>
   and A: \<open>\<forall>x y. A x y \<and> A y x \<longrightarrow> x = y\<close>
   and TA: \<open>\<forall>x y. T x y \<longrightarrow> A x y\<close> and \<open>A x y\<close>

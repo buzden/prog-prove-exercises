@@ -27,12 +27,12 @@ to_set_not_surj er surj = let SurjPrf f = surj \x => [x] in
 
 -- Exercise 4.1
 
+export
 lemma_4_1 : {t, a : ty -> ty -> Type} ->
-            ((x, y : ty) -> Either (t x y) (t y x)) ->
-            ((x, y : ty) -> a x y -> a y x -> x = y) ->
-            ((x, y : ty) -> t x y -> a x y) ->
-            {x, y : ty} ->
-            a x y -> t x y
+            (T : (x, y : ty) -> Either (t x y) (t y x)) ->
+            (A : (x, y : ty) -> a x y -> a y x -> x = y) ->
+            (TA : (x, y : ty) -> t x y -> a x y) ->
+            {x, y : ty} -> a x y -> t x y
 lemma_4_1 tl al tal axy = case tl x y of
   Left  txy => txy
   Right tyx => rewrite al x y axy $ tal y x tyx in either id id $ tl y y
