@@ -1,9 +1,11 @@
 module Chapter3
 
+import Data.Bool
 import Data.InSet
 import Data.List
 import Data.Nat
 import Data.So
+import Decidable.Equality
 
 %default total
 
@@ -15,24 +17,46 @@ data Tree a = Tip
 
 public export
 set : Eq a => Tree a -> InSet a
-set Tip = InSet.Nil
-set (Node l x r) = InSet.(::) x $ InSet.(+) (set l) (set r)
+set Tip          = []
+set (Node l x r) = [x] + set l + set r
 
--- TODO to revert normal list-like syntax instead of `InsSet.(...)` pornography.
+public export
+all_satisfy : (a -> Bool) -> Tree a -> Bool
+all_satisfy _ Tip          = True
+all_satisfy p (Node l x r) = p x && all_satisfy p l && all_satisfy p r
 
 public export
 ord : Ord a => Tree a -> Bool
+ord Tip = True
+ord (Node l x r) = ord l && ord r && all_satisfy (<= x) l && all_satisfy (>= x) r
 
-public export covering -- Don't know yet why totality is under doubt.
+public export
 ins : Ord a => a -> Tree a -> Tree a
 ins n Tip = Node Tip n Tip
-ins n t@(Node l x r) = case compare x n of
-  EQ => t
-  LT => Node (ins n l) x r
-  GT => Node l x (ins n r)
+ins n t@(Node l x r) with (x == n)
+  ins n t@(Node _ _ _) | True = t
+  ins n t@(Node l x r) | False with (x < n)
+    ins n t@(Node l x r) | False | True  = Node (ins n l) x r
+    ins n t@(Node l x r) | False | False = Node l x (ins n r)
 
---export
---ins_adds : Ord a => (x : a) -> (t : Tree a) -> set (ins x t) == InSet.(::) x (set t)
+export
+ins_adds : Ord a => (n : a) -> (t : Tree a) -> set (ins n t) == [n] + set t
+ins_adds n Tip p = let u = union_empty_neutral ([n] + []) p in
+                   rewrite u in -- what's the f**k? why should I do this?
+                   rewrite union_empty_neutral [n] p in
+                   Refl
+ins_adds n (Node l x r) p with (x == n)
+  ins_adds n (Node l x r) p | True =
+                                     --rewrite sym $ eq_appended_eq ([x] + set l + set r) xn_eq p in
+                                     ?ins_adds_rhs_1
+  ins_adds n (Node l x r) p | False with (x < n)
+    ins_adds n (Node l x r) p | False | True =
+                                               rewrite sym $ union_associative [x] (set (ins n l)) (set r) p in
+                                               let v = union_eq_cong_l (set r) (ins_adds n l) in
+                                               let u = union_eq_cong_r [x] v p in
+                                               --rewrite u p in
+                                               ?ins_adds_rhs_2
+    ins_adds n (Node l x r) p | False | False = ?ins_adds_rhs_3
 
 export
 ins_preserves_ord : Ord a => (i : a) -> (t : Tree a) -> ord t = True -> ord (ins i t) = True
