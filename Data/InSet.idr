@@ -43,23 +43,25 @@ notin x y = not $ isin x y
 --- Creation ---
 ----------------
 
-public export
-Empty : InSet a
-Empty _ = False
-
-public export
-Universe : InSet a
-Universe _ = True
-
 --- Syntax for list-like literals ---
 
-export %inline
+public export
 Nil : InSet a
-Nil = Empty
+Nil _ = False
 
 public export
 (::) : Eq a => a -> InSet a -> InSet a
 (::) added parent x = if x == added then True else x `isin` parent
+
+--- Constants
+
+public export %inline
+Empty : InSet a
+Empty = []
+
+public export
+Universe : InSet a
+Universe _ = True
 
 ---------------------------
 --- Basic set relations ---
@@ -156,6 +158,11 @@ non_empty_not_eq_empty (x ** prf_t) prf_f = trueNotFalse $ rewrite sym prf_t in 
 
 export
 eq_appended_eq : Eq a => (s : InSet a) -> {0 n, m : a} -> n == m = True -> [n] + s == [m] + s
+-- can be implemented only when `(x == n) /\ (x == m) ==> (n == m)`
+
+export
+x_in_x_etc : Eq a => (0 s : InSet a) -> (0 x : a) -> (0 eq_refl : x == x = True) -> x `isin` (x::s) = True
+x_in_x_etc _ _ eq_refl = rewrite eq_refl in Refl
 
 -------------------------------
 --- Laws of subset relation ---
