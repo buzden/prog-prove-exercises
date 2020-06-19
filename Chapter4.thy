@@ -14,10 +14,24 @@ proof -
     show \<open>T x y\<close> by (simp add: \<open>T x y\<close>)
   next
     assume \<open>T y x\<close>
-    then have \<open>A y x\<close> using TA by blast
-    then have \<open>x = y\<close> using A by (simp add: \<open>A x y\<close>)
+    then have \<open>A y x\<close> by (simp add: TA)
+    then have \<open>x = y\<close> by (simp add: A \<open>A x y\<close>)
     then show \<open>T x y\<close> using T by blast
   qed
 qed
+
+(*
+(* Slightly shorter and less constructive proof *)
+proof cases
+  assume \<open>T x y\<close>
+  show \<open>T x y\<close> by (simp add: \<open>T x y\<close>)
+next
+  assume \<open>\<not>T x y\<close>
+  have \<open>T y x\<close> using T \<open>\<not> T x y\<close> by blast
+  then have \<open>A y x\<close> by (simp add: TA)
+  then have \<open>x = y\<close> by (simp add: A \<open>A x y\<close>)
+  then show \<open>T x y\<close> using T by blast
+qed
+*)
 
 end
