@@ -377,8 +377,14 @@ decEq_x_x_is_yes x with (decEq x x)
   decEq_x_x_is_yes _ | No nn = absurd $ nn Refl
 
 export
-x_in_x_etc : DecEq a => (0 s : InSet a) -> (0 x : a) -> x `isin` (x::s) = True
-x_in_x_etc s x = rewrite decEq_x_x_is_yes x in Refl
+x_in_x_etc : DecEq a => (0 x : a) -> (0 s : InSet a) -> x `isin` (x::s) = True
+x_in_x_etc x _ = rewrite decEq_x_x_is_yes x in Refl
+
+export
+not_x_not_in_x_etc : DecEq a => (x, y : a) -> Not (x = y) -> x `isin` [y] = False
+not_x_not_in_x_etc x y f with (decEq x y)
+  not_x_not_in_x_etc _ _ f | Yes prf = absurd $ f prf
+  not_x_not_in_x_etc _ _ _ | No _ = Refl
 
 ----------------------
 --- Laws of append ---
