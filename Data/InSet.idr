@@ -2,7 +2,7 @@ module Data.InSet
 
 import Data.Bool
 import Data.Bool.Xor
-import Decidable.Equality
+import public Decidable.Equality
 
 %default total
 

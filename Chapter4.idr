@@ -20,10 +20,10 @@ EqRefl : Type -> Type
 EqRefl a = Eq a => (x : a) -> x == x = True
 
 export
-to_set_not_surj : Eq a => EqRefl a -> Not $ (f : a -> InSet a) -> Surj f
+to_set_not_surj : DecEq a => EqRefl a -> Not $ (f : a -> InSet a) -> Surj f
 to_set_not_surj er surj = let SurjPrf f = surj \x => [x] in
                           let (y ** prf) = f [] in
-                          non_empty_is_not_empty (y ** x_in_x_etc [] y (er y)) $ sym prf
+                          non_empty_is_not_empty (y ** x_in_x_etc y []) $ sym prf
 
 -- Exercise 4.1
 
