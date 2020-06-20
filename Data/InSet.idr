@@ -27,6 +27,9 @@ public export
 InSet : Type -> Type
 InSet a = a -> Bool
 
+-- TODO To think, maybe equality relation should be shown in the `InSet` type as a parameter?
+--      However, if this is only in the append operation, this gives an ability to union sets with different equalities.
+
 ------------------------------------
 --- Intesional test of existence ---
 ------------------------------------
@@ -50,8 +53,14 @@ Nil : InSet a
 Nil _ = False
 
 public export
-(::) : Eq a => a -> InSet a -> InSet a
-(::) added parent x = if x == added then True else x `isin` parent
+(::) : DecEq a => a -> InSet a -> InSet a
+(::) added parent x = case decEq x added of
+  Yes _ => True
+  No _  => x `isin` parent
+
+-- TODO Maybe to invent some generalization of `Eq` and `DecEq` which operates in with some relation
+--      (`==` in the case of `Eq` and `=` in the case of `DecEq`) and also exposes properties of equation:
+--      reflexivity, symmetry and transivity.
 
 --- Constants
 
@@ -158,16 +167,6 @@ export
 cant_in_and_not_in : (s : InSet a) -> (x : a) -> Not (x `isin` s = x `notin` s)
 cant_in_and_not_in s x prf with (s x)
   cant_in_and_not_in _ _ Refl | True impossible
-
---- Connection with external equality ---
-
-export
-eq_appended_eq : Eq a => (s : InSet a) -> {0 n, m : a} -> n == m = True -> [n] + s == [m] + s
--- can be implemented only when `(x == n) /\ (x == m) ==> (n == m)`
-
-export
-x_in_x_etc : Eq a => (0 s : InSet a) -> (0 x : a) -> (0 eq_refl : x == x = True) -> x `isin` (x::s) = True
-x_in_x_etc _ _ eq_refl = rewrite eq_refl in Refl
 
 -------------------------------
 --- Laws of subset relation ---
@@ -290,10 +289,14 @@ subset_of_complements_back f x prf = rewrite sym $ subset_of_complements f x (re
 --- Append ---
 
 export
-append_eq_cong : Eq a => {0 sa, sb : InSet a} -> (n : a) -> (0 _ : sa == sb) -> n::sa == n::sb
-append_eq_cong n f x with (x == n)
-  append_eq_cong _ _ _ | True  = Refl
-  append_eq_cong _ f x | False = rewrite f x in Refl
+append_eq_cong_l : DecEq a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> n::s == m::s
+append_eq_cong_l _ prf _ = rewrite prf in Refl
+
+export
+append_eq_cong_r : DecEq a => {0 sa, sb : InSet a} -> (n : a) -> (0 _ : sa == sb) -> n::sa == n::sb
+append_eq_cong_r n f x with (decEq x n)
+  append_eq_cong_r _ _ _ | Yes _ = Refl
+  append_eq_cong_r _ f x | No  _ = rewrite f x in Refl
 
 --- Union ---
 
@@ -304,6 +307,11 @@ union_eq_cong_l _ f x = rewrite f x in Refl
 export
 union_eq_cong_r : {0 sa, sb : InSet a} -> (0 sc : InSet a) -> (0 _ : sa == sb) -> sc + sa == sc + sb
 union_eq_cong_r _ f x = rewrite f x in Refl
+
+-- particular case for `append_eq_cong_l`
+export
+union_singleton_eq_cong_l : DecEq a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> [n] + s == [m] + s
+union_singleton_eq_cong_l _ prf x = rewrite append_eq_cong_l [] prf x in Refl
 
 -- TODO to add for subset
 
@@ -335,25 +343,52 @@ union_eq_cong_r _ f x = rewrite f x in Refl
 
 export
 cart_eq_cong_l : {0 sa, sb : InSet a} -> (0 sc : InSet c) -> (0 _ : sa == sb) -> sc * sa == sc * sb
+cart_eq_cong_l _ f (_, y) = rewrite f y in Refl
 
 export
 cart_eq_cong_r : {0 sa, sb : InSet a} -> (0 sc : InSet c) -> (0 _ : sa == sb) -> sa * sc == sb * sc
+cart_eq_cong_r _ f (x, _) = rewrite f x in Refl
+
+and_true_then_left_true : (a : Bool) -> {b : Bool} -> a && b = True -> a = True
+and_true_then_left_true True {b=True} Refl = Refl
+
+and_true_then_right_true : {a : Bool} -> (b : Bool) -> a && b = True -> b = True
+and_true_then_right_true {a=True} True Refl = Refl
 
 export
 cart_subset_cong_l : {0 sa, sb : InSet a} -> (0 sc : InSet c) -> (0 _ : sa <= sb) -> sc * sa <= sc * sb
+cart_subset_cong_l sc f (y, x) prf = rewrite f x $ and_true_then_right_true _ prf in
+                                     rewrite and_true_then_left_true (sc y) prf in
+                                     Refl
 
 export
 cart_subset_cong_r : {0 sa, sb : InSet a} -> (0 sc : InSet c) -> (0 _ : sa <= sb) -> sa * sc <= sb * sc
+cart_subset_cong_r sc f (x, y) prf = rewrite f x $ and_true_then_left_true _ prf in
+                                     rewrite and_true_then_right_true (sc y) prf in
+                                     Refl
+
+----------------------
+--- Laws of `isin` ---
+----------------------
+
+decEq_x_x_is_yes : DecEq a => (x : a) -> decEq x x = Yes Refl
+decEq_x_x_is_yes x with (decEq x x)
+  decEq_x_x_is_yes _ | Yes Refl = Refl
+  decEq_x_x_is_yes _ | No nn = absurd $ nn Refl
+
+export
+x_in_x_etc : DecEq a => (0 s : InSet a) -> (0 x : a) -> x `isin` (x::s) = True
+x_in_x_etc s x = rewrite decEq_x_x_is_yes x in Refl
 
 ----------------------
 --- Laws of append ---
 ----------------------
 
 export
-append_is_union : Eq a => (n : a) -> (0 s : InSet a) -> n::s == [n] + s
-append_is_union n _ x with (x == n)
-  append_is_union _ _ _ | True  = Refl
-  append_is_union _ _ _ | False = Refl
+append_is_union : DecEq a => (n : a) -> (0 s : InSet a) -> n::s == [n] + s
+append_is_union n _ x with (decEq x n)
+  append_is_union _ _ _ | Yes _ = Refl
+  append_is_union _ _ _ | No  _ = Refl
 
 ---------------------
 --- Laws of union ---
@@ -622,6 +657,12 @@ comp_of_diff sa sb x = rewrite notAndIsOr (sa x) (not $ sb x) in
 
 export
 intersection_of_carts : (0 sa, sb : InSet a) -> (0 sc, sd : InSet c) -> (sa * sc) # (sb * sd) == (sa # sb) * (sc # sd)
+intersection_of_carts sa sb sc sd (x, y) = rewrite sym $ andAssociative (sa x) (sc y) (sb x && sd y) in
+                                           rewrite sym $ andAssociative (sa x) (sb x) (sc y && sd y) in
+                                           rewrite andAssociative (sc y) (sb x) (sd y) in
+                                           rewrite andAssociative (sb x) (sc y) (sd y) in
+                                           rewrite andCommutative (sb x) (sc y) in
+                                           Refl
 
 export
 diff_of_carts : (0 sa, sb : InSet a) -> (0 sc, sd : InSet c) -> (sa * sc) - (sb * sd) == sa * (sc - sd) + (sa - sb) * sc
