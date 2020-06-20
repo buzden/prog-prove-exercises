@@ -16,7 +16,7 @@ data Tree a = Tip
             | Node (Tree a) a (Tree a)
 
 public export
-set : Eq a => Tree a -> InSet a
+set : DecEq a => Tree a -> InSet a
 set Tip          = []
 set (Node l x r) = [x] + set l + set r
 
@@ -39,6 +39,12 @@ ins n t@(Node l x r) with (x == n)
     ins n t@(Node l x r) | False | True  = Node (ins n l) x r
     ins n t@(Node l x r) | False | False = Node l x (ins n r)
 
+{-
+
+-- This function can be adequately written when `InSet` or (at least `[n]` literal) is parameterized with the equality,
+-- so we can say that in this particular function we are using sets with `Eq`-based `==`-equality, that is consistent
+-- with the `Ord` constraint.
+
 export
 ins_adds : Ord a => (n : a) -> (t : Tree a) -> set (ins n t) == [n] + set t
 ins_adds n Tip p = let u = union_empty_neutral ([n] + []) p in
@@ -57,6 +63,7 @@ ins_adds n (Node l x r) p with (x == n)
                                                --rewrite u p in
                                                ?ins_adds_rhs_2
     ins_adds n (Node l x r) p | False | False = ?ins_adds_rhs_3
+-}
 
 export
 ins_preserves_ord : Ord a => (i : a) -> (t : Tree a) -> ord t = True -> ord (ins i t) = True
