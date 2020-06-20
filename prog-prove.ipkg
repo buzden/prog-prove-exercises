@@ -1,0 +1,9 @@
+package prog-prove
+
+  depends = contrib
+
+  modules = Chapter2
+          , Chapter3
+          , Chapter4
+          , Data.InSet
+          , Data.InSet.List

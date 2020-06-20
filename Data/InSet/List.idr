@@ -3,7 +3,8 @@ module Data.InSet.List
 import Data.Bool
 import Data.InSet
 import Data.List
-import Decidable.Equality
+
+import Syntax.WithProof
 
 %default total
 
@@ -30,18 +31,14 @@ reverseOfConc x (y::ys) = rewrite reverseOfConc y ys in
 export
 reverse_preserves_elems : DecEq a => (xs : List a) -> elems (reverse xs) == elems xs
 reverse_preserves_elems []      n = Refl
-reverse_preserves_elems (x::xs) n with (decEq n x)
-  reverse_preserves_elems (x::xs) n | Yes yy = rewrite reverseOfConc x xs in
-                                               rewrite elems_of_concat (reverse xs) [x] n in
-                                               rewrite yy in
-                                               rewrite x_in_x_etc x [] in
-                                               rewrite orTrueTrue $ x `isin` elems (reverse xs) in
-                                               Refl
-  reverse_preserves_elems (x::xs) n | No nn = rewrite reverseOfConc x xs in
-                                              rewrite elems_of_concat (reverse xs) [x] n in
-                                              rewrite not_x_not_in_x_etc n x nn in
-                                              rewrite reverse_preserves_elems xs n in
-                                              rewrite orFalseNeutral $ n `isin` elems xs in
-                                              Refl
-
-  -- TODO to move out the common prefix of the two cases of the proof
+reverse_preserves_elems (x::xs) n with (@@(decEq n x))
+  reverse_preserves_elems (x::xs) n | (eq ** p) = rewrite reverseOfConc x xs in
+                                                  rewrite elems_of_concat (reverse xs) [x] n in
+                                                  rewrite p in
+                                                  case eq of
+                                                    Yes yy => rewrite yy in
+                                                              rewrite orTrueTrue $ x `isin` elems (reverse xs) in
+                                                              Refl
+                                                    No _ => rewrite reverse_preserves_elems xs n in
+                                                            rewrite orFalseNeutral $ n `isin` elems xs in
+                                                            Refl
