@@ -28,9 +28,9 @@ interface Equality a where
   equ_commutative_n : (x, y : a) -> {xy_neq : NeqPrf x y} -> x =?= y = NotEql xy_neq -> (yz_neq ** y =?= x = NotEql yz_neq)
 
   equ_transitive : (x, y, z : a) -> {0 xy_eq : EqPrf x y} -> {0 yz_eq : EqPrf y z} ->
-                  x =?= y = Eql xy_eq -> y =?= z = Eql yz_eq -> (xz_eq ** x =?= z = Eql xz_eq)
+                   x =?= y = Eql xy_eq -> y =?= z = Eql yz_eq -> (xz_eq ** x =?= z = Eql xz_eq)
 
-decEq_refl : DecEq a => (x : a) -> decEq x x = Yes Refl
+0 decEq_refl : DecEq a => (x : a) -> decEq x x = Yes Refl
 decEq_refl x = case @@(decEq x x) of
   (Yes Refl ** p) => p
   (No nn ** _) => absurd $ nn Refl
@@ -47,17 +47,17 @@ public export
   equ_reflexive x = rewrite decEq_refl x in (Refl ** Refl)
 
   equ_commutative_y x y xy = rewrite xy_eq in
-                            rewrite decEq_refl y in
-                            (Refl ** Refl)
+                             rewrite decEq_refl y in
+                             (Refl ** Refl)
 
   equ_commutative_n x y _ = case @@(decEq y x) of
     (No n  ** nn) => rewrite nn in (n ** Refl)
     (Yes p ** _)  => absurd $ xy_neq $ sym p
 
   equ_transitive x y z xy yz = rewrite xy_eq in
-                              rewrite yz_eq in
-                              rewrite decEq_refl z in
-                              (Refl ** Refl)
+                               rewrite yz_eq in
+                               rewrite decEq_refl z in
+                               (Refl ** Refl)
 
 public export
 [StandardEq] Eqv a => Equality a where
