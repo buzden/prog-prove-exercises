@@ -2,7 +2,10 @@ module Data.InSet
 
 import Data.Bool
 import Data.Bool.Xor
-import public Decidable.Equality
+
+import public Data.InSet.Equality
+
+import Decidable.Equality
 
 %default total
 
@@ -53,14 +56,10 @@ Nil : InSet a
 Nil _ = False
 
 public export
-(::) : DecEq a => a -> InSet a -> InSet a
-(::) added parent x = case decEq x added of
-  Yes _ => True
-  No _  => x `isin` parent
-
--- TODO Maybe to invent some generalization of `Eq` and `DecEq` which operates in with some relation
---      (`==` in the case of `Eq` and `=` in the case of `DecEq`) and also exposes properties of equation:
---      reflexivity, symmetry and transivity.
+(::) : Equality a => a -> InSet a -> InSet a
+(::) added parent x = case x =?= added of
+  Eql _ => True
+  NotEql _ => x `isin` parent
 
 --- Constants
 
@@ -289,14 +288,14 @@ subset_of_complements_back f x prf = rewrite sym $ subset_of_complements f x (re
 --- Append ---
 
 export
-append_eq_cong_l : DecEq a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> n::s == m::s
+append_eq_cong_l : Equality a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> n::s == m::s
 append_eq_cong_l _ prf _ = rewrite prf in Refl
 
 export
-append_eq_cong_r : DecEq a => {0 sa, sb : InSet a} -> (n : a) -> (0 _ : sa == sb) -> n::sa == n::sb
-append_eq_cong_r n f x with (decEq x n)
-  append_eq_cong_r _ _ _ | Yes _ = Refl
-  append_eq_cong_r _ f x | No  _ = rewrite f x in Refl
+append_eq_cong_r : Equality a => {0 sa, sb : InSet a} -> (n : a) -> (0 _ : sa == sb) -> n::sa == n::sb
+append_eq_cong_r n f x with (x =?= n)
+  append_eq_cong_r _ _ _ | Eql _ = Refl
+  append_eq_cong_r _ f x | NotEql _ = rewrite f x in Refl
 
 --- Union ---
 
@@ -310,7 +309,7 @@ union_eq_cong_r _ f x = rewrite f x in Refl
 
 -- particular case for `append_eq_cong_l`
 export
-union_singleton_eq_cong_l : DecEq a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> [n] + s == [m] + s
+union_singleton_eq_cong_l : Equality a => (0 s : InSet a) -> {0 n, m : a} -> (0 _ : n = m) -> [n] + s == [m] + s
 union_singleton_eq_cong_l _ prf x = rewrite append_eq_cong_l [] prf x in Refl
 
 -- TODO to add for subset
@@ -371,30 +370,29 @@ cart_subset_cong_r sc f (x, y) prf = rewrite f x $ and_true_then_left_true _ prf
 --- Laws of `isin` ---
 ----------------------
 
-decEq_x_x_is_yes : DecEq a => (x : a) -> decEq x x = Yes Refl
-decEq_x_x_is_yes x with (decEq x x)
-  decEq_x_x_is_yes _ | Yes Refl = Refl
-  decEq_x_x_is_yes _ | No nn = absurd $ nn Refl
+export
+x_in_x_etc : Equality a => (0 x : a) -> (0 s : InSet a) -> x `isin` (x::s) = True
+x_in_x_etc x s = rewrite snd $ equ_reflexive x in Refl
 
 export
-x_in_x_etc : DecEq a => (0 x : a) -> (0 s : InSet a) -> x `isin` (x::s) = True
-x_in_x_etc x _ = rewrite decEq_x_x_is_yes x in Refl
+x_in_same_etc : Equality a => (0 x, y : a) -> (0 s : InSet a) -> {0 xy_eq : EqPrf x y} -> (0 _ : x =?= y = Eql xy_eq) -> x `isin` (y::s) = True
+x_in_same_etc _ _ _ prf = rewrite prf in Refl
 
 export
-not_x_not_in_x_etc : DecEq a => (x, y : a) -> Not (x = y) -> x `isin` [y] = False
-not_x_not_in_x_etc x y f with (decEq x y)
-  not_x_not_in_x_etc _ _ f | Yes prf = absurd $ f prf
-  not_x_not_in_x_etc _ _ _ | No _ = Refl
+not_x_not_in_x_etc : Equality a => (x, y : a) -> NeqPrf x y -> x `isin` [y] = False
+not_x_not_in_x_etc x y neq with (x =?= y)
+  not_x_not_in_x_etc _ _ neq | Eql eq = absurd $ cant_eq_neq eq neq
+  not_x_not_in_x_etc _ _ _ | NotEql _ = Refl
 
 ----------------------
 --- Laws of append ---
 ----------------------
 
 export
-append_is_union : DecEq a => (n : a) -> (0 s : InSet a) -> n::s == [n] + s
-append_is_union n _ x with (decEq x n)
-  append_is_union _ _ _ | Yes _ = Refl
-  append_is_union _ _ _ | No  _ = Refl
+append_is_union : Equality a => (n : a) -> (0 s : InSet a) -> n::s == [n] + s
+append_is_union n _ x with (x =?= n)
+  append_is_union _ _ _ | Eql _ = Refl
+  append_is_union _ _ _ | NotEql _ = Refl
 
 ---------------------
 --- Laws of union ---
