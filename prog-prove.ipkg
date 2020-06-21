@@ -6,4 +6,6 @@ package prog-prove
           , Chapter3
           , Chapter4
           , Data.InSet
+          , Data.InSet.Equality
           , Data.InSet.List
+          , Data.Lawful.Eqv

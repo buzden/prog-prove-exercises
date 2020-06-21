@@ -4,7 +4,7 @@ import Data.Lawful.Eqv
 
 import Decidable.Equality
 
-import Syntax.WithProof
+import public Syntax.WithProof
 
 %default total
 
@@ -31,6 +31,9 @@ interface Equality a where
 
   equ_transitive : (x, y, z : a) -> {0 xy_eq : EqPrf x y} -> {0 yz_eq : EqPrf y z} ->
                    x =?= y = Eql xy_eq -> y =?= z = Eql yz_eq -> (xz_eq ** x =?= z = Eql xz_eq)
+
+-- TODO Maybe, to split `Equality` interface to two: one for equality relation, another to equivalence properties.
+--      Then, equality relation interace's implementations should be exported publicly, but properties proofs should not.
 
 0 decEq_refl : DecEq a => (x : a) -> decEq x x = Yes Refl
 decEq_refl x = case @@(decEq x x) of

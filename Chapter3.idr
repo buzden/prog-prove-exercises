@@ -2,10 +2,12 @@ module Chapter3
 
 import Data.Bool
 import Data.InSet
+import Data.Lawful.Eqv
 import Data.List
 import Data.Nat
 import Data.So
-import Decidable.Equality
+
+import Syntax.WithProof
 
 %default total
 
@@ -15,8 +17,13 @@ public export
 data Tree a = Tip
             | Node (Tree a) a (Tree a)
 
+-- Telling once that here we're using the `Eq`-based equality for sets.
+export %hint %inline
+UsedEquality : Eqv a => Equality a
+UsedEquality = StandardEq
+
 public export
-set : DecEq a => Tree a -> InSet a
+set : Eqv a => Tree a -> InSet a
 set Tip          = []
 set (Node l x r) = [x] + set l + set r
 
@@ -39,34 +46,32 @@ ins n t@(Node l x r) with (x == n)
     ins n t@(Node l x r) | False | True  = Node (ins n l) x r
     ins n t@(Node l x r) | False | False = Node l x (ins n r)
 
-{-
-
--- This function can be adequately written when `InSet` or (at least `[n]` literal) is parameterized with the equality,
--- so we can say that in this particular function we are using sets with `Eq`-based `==`-equality, that is consistent
--- with the `Ord` constraint.
+  -- Such verbose with-matching is done because else Idris suspects non-totality somewhy.
 
 export
-ins_adds : Ord a => (n : a) -> (t : Tree a) -> set (ins n t) == [n] + set t
+ins_adds : (Ord a, Eqv a) => (n : a) -> (t : Tree a) -> set (ins n t) == [n] + set t
 ins_adds n Tip p = let u = union_empty_neutral ([n] + []) p in
                    rewrite u in -- what's the f**k? why should I do this?
                    rewrite union_empty_neutral [n] p in
                    Refl
-ins_adds n (Node l x r) p with (x == n)
-  ins_adds n (Node l x r) p | True =
-                                     --rewrite sym $ eq_appended_eq ([x] + set l + set r) xn_eq p in
-                                     ?ins_adds_rhs_1
-  ins_adds n (Node l x r) p | False with (x < n)
-    ins_adds n (Node l x r) p | False | True =
-                                               rewrite sym $ union_associative [x] (set (ins n l)) (set r) p in
-                                               let v = union_eq_cong_l (set r) (ins_adds n l) in
-                                               let u = union_eq_cong_r [x] v p in
-                                               --rewrite u p in
-                                               ?ins_adds_rhs_2
-    ins_adds n (Node l x r) p | False | False = ?ins_adds_rhs_3
--}
+ins_adds n (Node l x r) p with (@@(x =?= n))
+  ins_adds n (Node l x r) p | (Eql yy ** prf) = ?ins_adds_rhs_1
+  ins_adds n (Node l x r) p | (NotEql nn ** prf) = ?ins_adds_rhs_2
+
+split_and : {a, b : Bool} -> a && b = True -> (a = True, b = True)
+split_and {a=True} {b=True} Refl = (Refl, Refl)
 
 export
 ins_preserves_ord : Ord a => (i : a) -> (t : Tree a) -> ord t = True -> ord (ins i t) = True
+ins_preserves_ord i Tip prf = prf
+ins_preserves_ord i (Node l x r) prf with (x == i)
+  ins_preserves_ord i (Node l x r) prf | True = prf
+  ins_preserves_ord i (Node l x r) prf | False with (x < i)
+    ins_preserves_ord i (Node l x r) prf | False | True =
+                                                          let v = ins_preserves_ord i l (fst $ split_and prf) in
+                                                          let u = fst $ split_and $ snd $ split_and prf in
+                                                          ?ins_preserves_ord_rhs_3
+    ins_preserves_ord i (Node l x r) prf | False | False = ?ins_preserves_ord_rhs_4
 
 -- Examples from section 3.5.1
 
