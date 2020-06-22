@@ -3,6 +3,8 @@ module Chapter4
 import Data.InSet
 import Data.List
 
+%default total
+
 -- Section 4.1
 
 public export
@@ -42,3 +44,26 @@ lemma_4_1 tl al tal axy = case tl x y of
   --             rewrite u in
   --             rewrite cong (t y) $ sym u in
   --             tyx
+
+-- Exercise 4.2
+
+length_of_init : (x : a) -> (xs : List a) -> length (init $ x::xs) = length xs
+length_of_init _ []      = Refl
+length_of_init _ (x::xs) = rewrite length_of_init x xs in Refl
+
+last_goes_right : (x : a) -> (xs, ys : List a) -> init (x::xs) ++ last (x::xs)::ys = x::xs ++ ys
+last_goes_right _ []      _  = Refl
+last_goes_right _ (x::xs) ys = rewrite last_goes_right x xs ys in Refl
+
+export
+lemma_4_2 : (xs : List a) -> (ys ** zs ** (xs = ys ++ zs, Either (length ys = length zs) (length ys = 1 + length zs)))
+lemma_4_2 [] = ([] ** [] ** (Refl, Left Refl))
+lemma_4_2 (x::xs) = let (ys ** zs ** (xyz, lengths)) = lemma_4_2 xs in
+                    rewrite xyz in
+                    case lengths of
+                      Left yz => (x::ys ** zs ** rewrite yz in (Refl, Right Refl))
+                      Right ySz => let (yh::ytl) = ys in
+                                   (x :: init ys ** last ys :: zs ** rewrite length_of_init x ys in
+                                                                     rewrite ySz in
+                                                                     rewrite last_goes_right yh ytl zs in
+                                                                     (Refl, Left Refl))
