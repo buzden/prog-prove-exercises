@@ -25,13 +25,13 @@ interface Equality a where
 
   (=?=) : (x, y : a) -> Bool
 
-  eq_prf_to_eql : {x, y : a} -> (eq_prf : EqPrf x y) -> x =?= y = True
+  -- Correspondence between type-level and runtime
 
-  neq_prf_to_not_eql : {x, y : a} -> (neq_prf : NeqPrf x y) -> x =?= y = False
+  eq_prf_to_val : {x, y : a} -> EqPrf x y -> x =?= y = True
+  eq_val_to_prf : {x, y : a} -> x =?= y = True -> EqPrf x y
 
-  eql_to_eq_prf : {x, y : a} -> x =?= y = True -> EqPrf x y
-
-  not_eql_to_neq_prf : {x, y : a} -> x =?= y = False -> NeqPrf x y
+  neq_prf_to_val : {x, y : a} -> NeqPrf x y -> x =?= y = False
+  neq_val_to_prf : {x, y : a} -> x =?= y = False -> NeqPrf x y
 
   -- Properties of equality for equality operator
 
@@ -68,19 +68,21 @@ public export
     Yes pxy => True
     No nxy => False
 
-  eq_prf_to_eql eq_prf = rewrite eq_prf in
+  -- Correspondence between type-level and runtime
+
+  eq_prf_to_val eq_prf = rewrite eq_prf in
                          rewrite decEq_refl y in
                          Refl
 
-  neq_prf_to_not_eql neq_prf = case @@(decEq x y) of
+  neq_prf_to_val neq_prf = case @@(decEq x y) of
     (No _ ** prf) => rewrite prf in Refl
     (Yes yy ** _) => absurd $ neq_prf yy
 
-  eql_to_eq_prf = case @@(decEq x y) of
+  eq_val_to_prf = case @@(decEq x y) of
     (Yes yy ** _) => \_ => yy
     (No _ ** prf) => rewrite prf in \ft => absurd $ trueNotFalse $ sym ft
 
-  not_eql_to_neq_prf = case @@(decEq x y) of
+  neq_val_to_prf = case @@(decEq x y) of
     (No nn ** _) => \_ => nn
     (Yes _ ** prf) => rewrite prf in \tf => absurd $ trueNotFalse tf
 
@@ -120,10 +122,13 @@ public export
 
   x =?= y = x == y
 
-  eq_prf_to_eql      = id
-  neq_prf_to_not_eql = id
-  eql_to_eq_prf      = id
-  not_eql_to_neq_prf = id
+  -- Correspondence between type-level and runtime
+
+  eq_prf_to_val = id
+  eq_val_to_prf = id
+
+  neq_prf_to_val = id
+  neq_val_to_prf = id
 
   -- Properties of value-level equality
 

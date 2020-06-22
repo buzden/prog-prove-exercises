@@ -380,7 +380,7 @@ export
 not_x_not_in_x_etc : Equality a => (x, y : a) -> NeqPrf x y -> x `isin` [y] = False
 not_x_not_in_x_etc x y neq = case @@(x =?= y) of
   (False ** prf) => rewrite prf in Refl
-  (True ** prf) => absurd $ cant_eq_neq (eql_to_eq_prf prf) neq
+  (True ** prf) => absurd $ cant_eq_neq (eq_val_to_prf prf) neq
 
 ----------------------
 --- Laws of append ---
