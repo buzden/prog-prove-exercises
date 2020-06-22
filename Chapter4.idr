@@ -67,3 +67,8 @@ lemma_4_2 (x::xs) = let (ys ** zs ** (xyz, lengths)) = lemma_4_2 xs in
                                                                      rewrite ySz in
                                                                      rewrite last_goes_right yh ytl zs in
                                                                      (Refl, Left Refl))
+
+  -- I did the proof of ex. 4.2 by case analysis rather than by suggesting `take (half $ 1 + length xs) xs` and `drop (half $ 1 + length xs) xs` as
+  -- `ys` and `zs` respectively because this solution is simpler for Idris since it does not involve `Nat` division and other arithmetics.
+  -- Standard library also seems to not to contain lemmas about `take` and `drop`, thus I need to formulate and prove them myself.
+  -- It is possible, but tough.
