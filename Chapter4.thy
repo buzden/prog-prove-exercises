@@ -36,4 +36,16 @@ next
 qed
 *)
 
+(* Exercise 4.2 *)
+
+lemma \<open>\<exists>ys zs. xs = ys @ zs \<and>
+               (length ys = length zs \<or> length ys = length zs + 1)\<close>
+  (is \<open>\<exists>ys zs. ?p ys zs\<close>)
+proof -
+  let ?ys = \<open>take ((length xs + 1) div 2) xs\<close>
+  let ?zs = \<open>drop ((length xs + 1) div 2) xs\<close>
+  have \<open>xs = ?ys @ ?zs \<and> (length ?ys = length ?zs \<or> length ?ys = length ?zs + 1)\<close> by auto
+  then show ?thesis by blast
+qed
+
 end
