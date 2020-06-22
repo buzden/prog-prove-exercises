@@ -57,9 +57,7 @@ Nil _ = False
 
 public export
 (::) : Equality a => a -> InSet a -> InSet a
-(::) added parent x = case x =?= added of
-  Eql _ => True
-  NotEql _ => x `isin` parent
+(::) added parent x = if x =?= added then True else x `isin` parent
 
 --- Constants
 
@@ -294,8 +292,8 @@ append_eq_cong_l _ prf _ = rewrite prf in Refl
 export
 append_eq_cong_r : Equality a => {0 sa, sb : InSet a} -> (n : a) -> (0 _ : sa == sb) -> n::sa == n::sb
 append_eq_cong_r n f x with (x =?= n)
-  append_eq_cong_r _ _ _ | Eql _ = Refl
-  append_eq_cong_r _ f x | NotEql _ = rewrite f x in Refl
+  append_eq_cong_r _ _ _ | True = Refl
+  append_eq_cong_r _ f x | False = rewrite f x in Refl
 
 --- Union ---
 
@@ -372,17 +370,17 @@ cart_subset_cong_r sc f (x, y) prf = rewrite f x $ and_true_then_left_true _ prf
 
 export
 x_in_x_etc : Equality a => (0 x : a) -> (0 s : InSet a) -> x `isin` (x::s) = True
-x_in_x_etc x s = rewrite snd $ equ_reflexive x in Refl
+x_in_x_etc x s = rewrite equ_reflexive x in Refl
 
 export
-x_in_same_etc : Equality a => (0 x, y : a) -> (0 s : InSet a) -> {0 xy_eq : EqPrf x y} -> (0 _ : x =?= y = Eql xy_eq) -> x `isin` (y::s) = True
+x_in_same_etc : Equality a => (0 x, y : a) -> (0 s : InSet a) -> (0 _ : x =?= y = True) -> x `isin` (y::s) = True
 x_in_same_etc _ _ _ prf = rewrite prf in Refl
 
 export
 not_x_not_in_x_etc : Equality a => (x, y : a) -> NeqPrf x y -> x `isin` [y] = False
-not_x_not_in_x_etc x y neq with (x =?= y)
-  not_x_not_in_x_etc _ _ neq | Eql eq = absurd $ cant_eq_neq eq neq
-  not_x_not_in_x_etc _ _ _ | NotEql _ = Refl
+not_x_not_in_x_etc x y neq = case @@(x =?= y) of
+  (False ** prf) => rewrite prf in Refl
+  (True ** prf) => absurd $ cant_eq_neq (eql_to_eq_prf prf) neq
 
 ----------------------
 --- Laws of append ---
@@ -391,8 +389,8 @@ not_x_not_in_x_etc x y neq with (x =?= y)
 export
 append_is_union : Equality a => (n : a) -> (0 s : InSet a) -> n::s == [n] + s
 append_is_union n _ x with (x =?= n)
-  append_is_union _ _ _ | Eql _ = Refl
-  append_is_union _ _ _ | NotEql _ = Refl
+  append_is_union _ _ _ | True = Refl
+  append_is_union _ _ _ | False = Refl
 
 ---------------------
 --- Laws of union ---

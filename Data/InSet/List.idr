@@ -17,8 +17,8 @@ export
 elems_of_concat : Equality a => (xs, ys : List a) -> elems (xs ++ ys) == elems xs + elems ys
 elems_of_concat [] _ _ = Refl
 elems_of_concat (x::xs) ys n = case @@(n =?= x) of
-  (Eql    _ ** prf) => rewrite prf in Refl
-  (NotEql _ ** prf) => rewrite prf in elems_of_concat xs ys n
+  (True  ** prf) => rewrite prf in Refl
+  (False ** prf) => rewrite prf in elems_of_concat xs ys n
 
 -- This is better to be placed in `Data.List`.
 reverseOfConc : (x : a) -> (xs : List a) -> reverse (x::xs) = reverse xs ++ [x]
@@ -34,11 +34,11 @@ reverse_preserves_elems []      n = Refl
 reverse_preserves_elems (x::xs) n = rewrite reverseOfConc x xs in
                                     rewrite elems_of_concat (reverse xs) [x] n in
                                     case @@(n =?= x) of
-                                      (Eql _ ** prf) => rewrite x_in_same_etc n x [] prf in
-                                                        rewrite prf in
-                                                        rewrite orTrueTrue $ n `isin` elems (reverse xs) in
+                                      (True ** prf) => rewrite x_in_same_etc n x [] prf in
+                                                       rewrite prf in
+                                                       rewrite orTrueTrue $ n `isin` elems (reverse xs) in
+                                                       Refl
+                                      (False ** prf) => rewrite prf in
+                                                        rewrite reverse_preserves_elems xs n in
+                                                        rewrite orFalseNeutral $ n `isin` elems xs in
                                                         Refl
-                                      (NotEql _ ** prf) => rewrite prf in
-                                                           rewrite reverse_preserves_elems xs n in
-                                                           rewrite orFalseNeutral $ n `isin` elems xs in
-                                                           Refl

@@ -55,8 +55,8 @@ ins_adds n Tip p = let u = union_empty_neutral ([n] + []) p in
                    rewrite union_empty_neutral [n] p in
                    Refl
 ins_adds n (Node l x r) p with (@@(x =?= n))
-  ins_adds n (Node l x r) p | (Eql yy ** prf) = ?ins_adds_rhs_1
-  ins_adds n (Node l x r) p | (NotEql nn ** prf) = ?ins_adds_rhs_2
+  ins_adds n (Node l x r) p | (True ** prf) = ?ins_adds_rhs_1
+  ins_adds n (Node l x r) p | (False ** prf) = ?ins_adds_rhs_2
 
 split_and : {a, b : Bool} -> a && b = True -> (a = True, b = True)
 split_and {a=True} {b=True} Refl = (Refl, Refl)
