@@ -676,6 +676,13 @@ union_of_carts : (0 sa, sb : InSet a) -> (0 sc, sd : InSet c) -> (sa * sc) + (sb
 
 export
 cart_distributes_over_intersection : (0 sa : InSet a) -> (0 sb, sc : InSet b) -> sa * (sb # sc) == (sa * sb) # (sa * sc)
+cart_distributes_over_intersection sa sb sc (x, y) = rewrite sym $ andAssociative (sa x) (sb y) (sa x && sc y) in
+                                                     rewrite andAssociative (sb y) (sa x) (sc y) in
+                                                      rewrite andCommutative (sb y) (sa x) in
+                                                     rewrite sym $ andAssociative (sa x) (sb y) (sc y) in
+                                                     rewrite andAssociative (sa x) (sa x) (sb y && sc y) in
+                                                      rewrite andSameNeutral (sa x) in
+                                                     Refl
 
 export
 cart_distributes_over_union : (0 sa : InSet a) -> (0 sb, sc : InSet b) -> sa * (sb + sc) == (sa * sb) + (sa * sc)
