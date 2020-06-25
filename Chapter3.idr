@@ -204,7 +204,6 @@ s_to_t : T w -> S w
 s_to_t Empty      = Empty
 s_to_t (Tatb x y) = Ss (s_to_t x) $ Asb $ s_to_t y
 
-export
 t_conj : T w -> T v -> T (w ++ v)
 t_conj x Empty = rewrite appendNilRightNeutral w in x
 t_conj x (Tatb {v=a} {w=b} y z) = rewrite appendAssociative w b ([A] ++ a ++ [B]) in Tatb (t_conj x y) z

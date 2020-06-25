@@ -369,6 +369,10 @@ cart_subset_cong_r sc f (x, y) prf = rewrite f x $ and_true_then_left_true _ prf
 ----------------------
 
 export
+not_in_empty : Equality a => (0 x : a) -> x `isin` [] = False
+not_in_empty _ = Refl
+
+export
 x_in_x_etc : Equality a => (0 x : a) -> (0 s : InSet a) -> x `isin` (x::s) = True
 x_in_x_etc x s = rewrite equ_reflexive x in Refl
 
@@ -381,6 +385,18 @@ not_x_not_in_x_etc : Equality a => (x, y : a) -> NeqPrf x y -> x `isin` [y] = Fa
 not_x_not_in_x_etc x y neq = case @@(x =?= y) of
   (False ** prf) => rewrite prf in Refl
   (True ** prf) => absurd $ cant_eq_neq (eq_val_to_prf prf) neq
+
+export
+not_in_both : Equality a => (0 x, y : a) -> (0 ys : InSet a) -> (0 _ : x =?= y = False) -> (0 _ : x `isin` ys = False) -> x `isin` (y::ys) = False
+not_in_both x y ys xy xys = rewrite xy in
+                            rewrite xys in
+                            Refl
+
+export
+is_in_tail : Equality a => (0 x, y : a) -> (0 ys : InSet a) -> (0 _ : x =?= y = False) -> (0 _ : x `isin` (y::ys) = True) -> x `isin` ys = True
+is_in_tail _ _ _ xy xyys = rewrite sym xyys in
+                           rewrite xy in
+                           Refl
 
 ----------------------
 --- Laws of append ---
