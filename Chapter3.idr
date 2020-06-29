@@ -190,21 +190,21 @@ namespace S
   public export
   data S : List Alpha -> Type where
     Empty : S []
-    Asb   : S w -> S $ [A] ++ w ++ [B]
-    Ss    : S w -> S v -> S $ w ++ v
+    Asb   : {w : List Alpha} -> S w -> S $ [A] ++ w ++ [B]
+    Ss    : {w, v : List Alpha} -> S w -> S v -> S $ w ++ v
 
 namespace T
   public export
   data T : List Alpha -> Type where
     Empty : T []
-    Tatb  : T w -> T v -> T $ w ++ [A] ++ v ++ [B]
+    Tatb  : {w, v : List Alpha} -> T w -> T v -> T $ w ++ [A] ++ v ++ [B]
 
 export
 s_to_t : T w -> S w
-s_to_t Empty      = Empty
-s_to_t (Tatb x y) = Ss (s_to_t x) $ Asb $ s_to_t y
+s_to_t Empty              = Empty
+s_to_t (Tatb {w} {v} x y) = Ss (s_to_t x) $ Asb $ s_to_t y
 
-t_conj : T w -> T v -> T (w ++ v)
+t_conj : {w : List Alpha} -> T w -> T v -> T (w ++ v)
 t_conj x Empty = rewrite appendNilRightNeutral w in x
 t_conj x (Tatb {v=a} {w=b} y z) = rewrite appendAssociative w b ([A] ++ a ++ [B]) in Tatb (t_conj x y) z
 
