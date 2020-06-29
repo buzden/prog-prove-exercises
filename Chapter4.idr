@@ -131,6 +131,10 @@ namespace Exercise_4_6
 
 public export
 balanced : Nat -> List Alpha -> Bool
+balanced 0     []     = True
+balanced n     (A::w) = balanced (S n) w
+balanced (S n) (B::w) = balanced n w
+balanced _     _      = False
 
 -- There are a four statements instead of one because `balanced` is coded with `Bool` but `S.S` is inductive data type.
 

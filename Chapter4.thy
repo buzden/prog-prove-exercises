@@ -134,11 +134,14 @@ qed
 
 (* Exercise 4.7 *)
 
-(*
 fun balanced :: \<open>nat \<Rightarrow> alpha list \<Rightarrow> bool\<close> where
+  \<open>balanced 0       []    = True\<close>
+| \<open>balanced n       (a#w) = balanced (Suc n) w\<close>
+| \<open>balanced (Suc n) (b#w) = balanced n w\<close>
+| \<open>balanced _       _     = False\<close>
+
 
 theorem balanced_thru_replicate:
   \<open>balanced n w = S (replicate n a @ w)\<close>
-*)
 
 end
