@@ -136,10 +136,33 @@ balanced n     (A::w) = balanced (S n) w
 balanced (S n) (B::w) = balanced n w
 balanced _     _      = False
 
+--balanced_sn_contains_b : (w : List Alpha) -> (n : Nat) -> balanced (S n) w = True -> (l ** r ** w = (l ++ [B]) ++ r)
+
+replicate_appended : (n : Nat) -> (x : a) -> (w : List a) -> replicate n x ++ x::w = x :: replicate n x ++ w
+replicate_appended 0     x w = Refl
+replicate_appended (S n) x w = rewrite replicate_appended n x w in Refl
+
+init_last_decomp : (xs : List a) -> {auto ne : NonEmpty xs} -> xs = init xs ++ [last xs]
+init_last_decomp (_::[])        = Refl
+init_last_decomp (x::xs@(_::_)) = rewrite sym $ init_last_decomp xs in Refl
+
+s_can_insert_ab : (l, r : List Alpha) -> S (l ++ r) -> S (l ++ [A, B] ++ r)
+s_can_insert_ab [] r = Ss (Asb Empty)
+s_can_insert_ab l [] = rewrite appendNilRightNeutral l in flip Ss (Asb Empty)
+s_can_insert_ab l@(lh::lt) r@(rh::rt) = ?s_can_insert_ab_rhs_3
+
 -- There are a four statements instead of one because `balanced` is coded with `Bool` but `S.S` is inductive data type.
 
 export
 balanced_true_as_s : (n : Nat) -> (w : List Alpha) -> balanced n w = True -> S.S $ replicate n A ++ w
+balanced_true_as_s 0     []     _   = Empty
+balanced_true_as_s 0     (A::w) prf = balanced_true_as_s 1 w prf
+balanced_true_as_s (S n) (A::w) prf = rewrite appendAssociative (replicate (S n) A) [A] w in
+                                      rewrite replicate_appended n A [] in
+                                      rewrite appendNilRightNeutral $ replicate n A in
+                                      balanced_true_as_s (2 + n) w prf
+balanced_true_as_s (S n) (B::w) prf = rewrite sym $ replicate_appended n A (B::w) in
+                                      s_can_insert_ab (replicate n A) w $ balanced_true_as_s n w prf
 
 export
 balanced_false_as_not_s : (n : Nat) -> (w : List Alpha) -> balanced n w = False -> Not $ S.S $ replicate n A ++ w
