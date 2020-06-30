@@ -141,14 +141,13 @@ replicate_appended : (n : Nat) -> (x : a) -> (w : List a) -> replicate n x ++ x:
 replicate_appended 0     x w = Refl
 replicate_appended (S n) x w = rewrite replicate_appended n x w in Refl
 
-list_splits : (u, v, x, y : List a) -> u ++ v = x ++ y -> (m ** Either (u = x ++ m, y = m ++ v) (x = u ++ m, v = m ++ y))
-list_splits [] _ x  _ prf = (x ** Right (Refl, prf))
-list_splits u  _ [] _ prf = (u ** Left  (Refl, sym prf))
+list_splits : (u, v, x, y : List a) -> u ++ v = x ++ y -> Either (m ** (u = x ++ m, y = m ++ v)) (m ** (x = u ++ m, v = m ++ y))
+list_splits [] _ x  _ prf = Right (x ** (Refl, prf))
+list_splits u  _ [] _ prf = Left  (u ** (Refl, sym prf))
 list_splits (_::us) v (_::xs) y prf = rewrite fst $ consInjective prf in
-                                      let (m ** spl) = list_splits us v xs y $ snd $ consInjective prf in
-                                      case spl of
-                                        Right (ux, vy) => rewrite ux in (m ** Right (Refl, vy))
-                                        Left  (ux, vy) => rewrite ux in (m ** Left  (Refl, vy))
+                                      case list_splits us v xs y $ snd $ consInjective prf of
+                                        Right (m ** (ux, vy)) => rewrite ux in Right (m ** (Refl, vy))
+                                        Left  (m ** (ux, vy)) => rewrite ux in Left  (m ** (Refl, vy))
 
 append_is_nil : (l, r : List a) -> l ++ r = [] -> (l = [], r = [])
 append_is_nil [] [] Refl = (Refl, Refl)
@@ -172,42 +171,38 @@ s_can_insert_ab l r s = case analyze_s s of
                                          rewrite snd $ append_is_nil l r lr_nil in
                                          Asb Empty
                           Right $ Left (w ** sw ** eq) =>
-                            let (m ** spl) = list_splits l r [A] (w ++ [B]) eq in
-                            case spl of
-                              Left (l_Am, wB_mr) =>
-                                rewrite l_Am in
-                                let (k ** spk) = list_splits m r w [B] $ sym wB_mr in
-                                case spk of
-                                  Left  (m_wk, kr) => rewrite m_wk in
-                                                      case append_is_singleton k r B kr of
-                                                        Left  (kB, rn) => rewrite kB in
-                                                                          rewrite rn in
-                                                                          Ss (Asb sw) (Asb Empty)
-                                                        Right (kn, rB) => rewrite kn in
-                                                                          rewrite rB in
-                                                                          rewrite appendNilRightNeutral w in
-                                                                          rewrite appendAssociative w [A, B] [B] in
-                                                                          Asb $ Ss sw $ Asb Empty
-                                  Right (w_mk, r_kB) => rewrite r_kB in
-                                                        rewrite appendAssociative m (A::B::k) [B] in
-                                                        Asb $ s_can_insert_ab (assert_smaller l m) (assert_smaller r k) rewrite sym w_mk in sw
-                              Right (lm, r_mwB) => rewrite r_mwB in case append_is_singleton l m A lm of
-                                Left  (lA, mn) => rewrite lA in
-                                                  rewrite mn in
-                                                  Asb $ Ss (Asb Empty) sw
+                            case list_splits l r [A] (w ++ [B]) eq of
+                              Left (m ** (l_Am, wB_mr)) => rewrite l_Am in case list_splits m r w [B] $ sym wB_mr of
+                                Left (k ** (m_wk, kr)) => rewrite m_wk in case append_is_singleton k r B kr of
+                                  Left  (kB, rn) => rewrite kB in
+                                                    rewrite rn in
+                                                    Ss (Asb sw) (Asb Empty)
+                                  Right (kn, rB) => rewrite kn in
+                                                    rewrite rB in
+                                                    rewrite appendNilRightNeutral w in
+                                                    rewrite appendAssociative w [A, B] [B] in
+                                                    Asb $ Ss sw $ Asb Empty
+                                Right (k ** (w_mk, r_kB)) =>
+                                  rewrite r_kB in
+                                  rewrite appendAssociative m (A::B::k) [B] in
+                                  Asb $ s_can_insert_ab (assert_smaller l m) (assert_smaller r k) rewrite sym w_mk in sw
+                              Right (m ** (lm, r_mwB)) => rewrite r_mwB in case append_is_singleton l m A lm of
+                                Left (lA, mn) => rewrite lA in
+                                                 rewrite mn in
+                                                 Asb $ Ss (Asb Empty) sw
                                 Right (ln, mA) => rewrite ln in
                                                   rewrite mA in
                                                   rewrite sym eq in
                                                   Ss (Asb Empty) s
-                          Right $ Right (w ** v ** sw ** sv ** eq) =>
-                            let (m ** spl) = list_splits l r w v eq in
-                            case spl of
-                              Left (l_wm, v_rm) => rewrite l_wm in
-                                                   rewrite sym $ appendAssociative w m (A::B::r) in
-                                                   Ss sw $ s_can_insert_ab (assert_smaller l m) r rewrite sym v_rm in sv
-                              Right (w_lm, r_mv) => rewrite r_mv in
-                                                    rewrite appendAssociative l (A::B::m) v in
-                                                    flip Ss sv $ s_can_insert_ab l (assert_smaller r m) rewrite sym w_lm in sw
+                          Right $ Right (w ** v ** sw ** sv ** eq) => case list_splits l r w v eq of
+                            Left (m ** (l_wm, v_rm)) =>
+                              rewrite l_wm in
+                              rewrite sym $ appendAssociative w m (A::B::r) in
+                              Ss sw $ s_can_insert_ab (assert_smaller l m) r rewrite sym v_rm in sv
+                            Right (m ** (w_lm, r_mv)) =>
+                              rewrite r_mv in
+                              rewrite appendAssociative l (A::B::m) v in
+                              flip Ss sv $ s_can_insert_ab l (assert_smaller r m) rewrite sym w_lm in sw
 
 -- There are a four statements instead of one because `balanced` is coded with `Bool` but `S.S` is inductive data type.
 
