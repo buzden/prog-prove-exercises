@@ -2,6 +2,7 @@ module Chapter4
 
 import Chapter3
 
+import Data.Bool
 import Data.InSet
 import Data.InSet.List
 import Data.List
@@ -110,10 +111,10 @@ ev_ss_thus_ev (EvSS x) = x
 
 -- `elems` is defined in `Data.InSet.List`.
 
-namespace Exercise_4_6
+falseNotTrue : Not (False = True)
+falseNotTrue Refl impossible
 
-  falseNotTrue : Not (False = True)
-  falseNotTrue Refl impossible
+namespace Exercise_4_6
 
   export %hint %inline
   UsedEquality : DecEq a => Equality a
@@ -218,10 +219,14 @@ balanced_true_as_s (S n) (B::w) prf = rewrite sym $ replicate_appended n A (B::w
                                       s_can_insert_ab (replicate n A) w $ balanced_true_as_s n w prf
 
 export
-balanced_false_as_not_s : (n : Nat) -> (w : List Alpha) -> balanced n w = False -> Not $ S.S $ replicate n A ++ w
-
-export
 s_as_balanced_true : (n : Nat) -> (w : List Alpha) -> S.S $ replicate n A ++ w -> balanced n w = True
 
 export
+balanced_false_as_not_s : (n : Nat) -> (w : List Alpha) -> balanced n w = False -> Not $ S.S $ replicate n A ++ w
+balanced_false_as_not_s n w prf s = falseNotTrue $ rewrite sym prf in s_as_balanced_true n w s
+
+export
 not_s_as_balanced_false : (n : Nat) -> (w : List Alpha) -> Not $ S.S $ replicate n A ++ w -> balanced n w = False
+not_s_as_balanced_false n w f = case decEq (balanced n w) False of
+  Yes p => p
+  No no => absurd $ f $ balanced_true_as_s n w $ notFalseIsTrue no
