@@ -146,6 +146,18 @@ init_last_decomp : (xs : List a) -> {auto ne : NonEmpty xs} -> xs = init xs ++ [
 init_last_decomp (_::[])        = Refl
 init_last_decomp (x::xs@(_::_)) = rewrite sym $ init_last_decomp xs in Refl
 
+export
+list_splits : (u, v, x, y : List a) -> u ++ v = x ++ y -> Either (u = x, v = y) $ Either (m ** (u = x ++ m, y = m ++ v)) (m ** (x = u ++ m, v = m ++ y))
+list_splits [] _ [] _ prf = Left (Refl, prf)
+list_splits [] _ x  _ prf = Right $ Right (x ** (Refl, prf))
+list_splits u  _ [] _ prf = Right $ Left  (u ** (Refl, sym prf))
+list_splits (u::us) v (x::xs) y prf = let (ux, usvxsy) = consInjective prf in
+                                      rewrite ux in
+                                      case list_splits us v xs y usvxsy of
+                                        Left                (ux, vy)  => rewrite ux in Left                (Refl, vy)
+                                        Right $ Right (m ** (ux, vy)) => rewrite ux in Right $ Right (m ** (Refl, vy))
+                                        Right $ Left  (m ** (ux, vy)) => rewrite ux in Right $ Left  (m ** (Refl, vy))
+
 s_can_insert_ab : (l, r : List Alpha) -> S (l ++ r) -> S (l ++ [A, B] ++ r)
 s_can_insert_ab [] r = Ss (Asb Empty)
 s_can_insert_ab l [] = rewrite appendNilRightNeutral l in flip Ss (Asb Empty)
