@@ -205,6 +205,18 @@ s_can_insert_ab l r s = case analyze_s s of
                               rewrite appendAssociative l (A::B::m) v in
                               flip Ss sv $ s_can_insert_ab l (assert_smaller r m) rewrite sym w_lm in sw
 
+s_can_elim_ab : (l, r : List Alpha) -> S (l ++ [A, B] ++ r) -> S (l ++ r)
+s_can_elim_ab l r s = case analyze_s s of
+                        Left eq => ?s_can_elim_ab_rhs_1
+                        Right $ Left (w ** sw ** eq) => ?s_can_elim_ab_rhs_2
+                        Right $ Right (w ** v ** sw ** sv ** eq) => ?s_can_elim_ab_rhs_3
+
+balanced_appended : (n : Nat) -> (l, r : List Alpha) -> balanced n l = True -> balanced 0 r = True -> balanced n (l ++ r) = True
+balanced_appended 0      []    _ _   prf = prf
+balanced_appended 0     (A::l) r plf prf = balanced_appended 1 l r plf prf
+balanced_appended (S n) (A::l) r plf prf = balanced_appended (S $ S n) l r plf prf
+balanced_appended (S n) (B::l) r plf prf = balanced_appended n l r plf prf
+
 -- There are a four statements instead of one because `balanced` is coded with `Bool` but `S.S` is inductive data type.
 
 export
@@ -220,6 +232,14 @@ balanced_true_as_s (S n) (B::w) prf = rewrite sym $ replicate_appended n A (B::w
 
 export
 s_as_balanced_true : (n : Nat) -> (w : List Alpha) -> S.S $ replicate n A ++ w -> balanced n w = True
+s_as_balanced_true 0 [] Empty = Refl
+s_as_balanced_true 0 (A :: w ++ [B]) (Asb x) = s_as_balanced_true 1 (w ++ [B]) (Asb x)
+s_as_balanced_true 0 (w ++ v) (Ss x y) = let xx = assert_total $ s_as_balanced_true 0 w x in
+                                         let yy = assert_total $ s_as_balanced_true 0 v y in
+                                         balanced_appended 0 w v xx yy
+s_as_balanced_true (S n) [] Empty impossible
+s_as_balanced_true (S n) (A::w) x = s_as_balanced_true (S $ S n) w rewrite sym $ replicate_appended n A w in x
+s_as_balanced_true (S n) (B::w) x = s_as_balanced_true n w $ s_can_elim_ab (replicate n A) w rewrite replicate_appended n A (B::w) in x
 
 export
 balanced_false_as_not_s : (n : Nat) -> (w : List Alpha) -> balanced n w = False -> Not $ S.S $ replicate n A ++ w
