@@ -1,0 +1,3 @@
+The contents of this work, especially reusable general part in the `Data.*` modules,
+is meant to be able to be used in other open-source idris libraries (maybe, even in standard ones).
+License used in this project is not meant to prevent or disturb from doing this.
