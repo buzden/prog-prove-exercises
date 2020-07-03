@@ -205,11 +205,69 @@ s_can_insert_ab l r s = case analyze_s s of
                               rewrite appendAssociative l (A::B::m) v in
                               flip Ss sv $ s_can_insert_ab l (assert_smaller r m) rewrite sym w_lm in sw
 
+init_last_decomp : (xs : List a) -> {auto ne : NonEmpty xs} -> xs = init xs ++ [last xs]
+init_last_decomp (_::[])        = Refl
+init_last_decomp (x::xs@(_::_)) = rewrite sym $ init_last_decomp xs in Refl
+
+not_s_start_b : (w : List Alpha) -> Not $ S $ B::w
+not_s_start_b _ Empty impossible
+
+not_s_end_a : (w : List Alpha) -> Not $ S $ w ++ [A]
+not_s_end_a [] Empty impossible
+not_s_end_a (A::_) Empty impossible
+not_s_end_a (B::_) Empty impossible
+
 s_can_elim_ab : (l, r : List Alpha) -> S (l ++ [A, B] ++ r) -> S (l ++ r)
-s_can_elim_ab l r s = case analyze_s s of
-                        Left eq => ?s_can_elim_ab_rhs_1
-                        Right $ Left (w ** sw ** eq) => ?s_can_elim_ab_rhs_2
-                        Right $ Right (w ** v ** sw ** sv ** eq) => ?s_can_elim_ab_rhs_3
+s_can_elim_ab [] r s = case analyze_s s of
+  Right $ Left (w ** sw ** _) => case w of B::w' => absurd $ not_s_start_b w' sw
+  Right $ Right (w ** v ** sw ** sv ** eq) => case w of
+    [] => assert_total {-assert_smaller s sv-} $ s_can_elim_ab [] r rewrite eq in sv
+    A::B::w' => rewrite snd $ consInjective $ snd $ consInjective eq in
+                flip Ss sv $ assert_total {-assert_smaller s sw-} $ s_can_elim_ab [] w' sw
+s_can_elim_ab (l::ls) [] s = rewrite appendNilRightNeutral ls in case analyze_s s of
+  Right $ Left (w ** sw ** eq) => let u = fst $ snocInjective {xs=ls++[A]} {x=B} {ys=w} {y=B}
+                                            rewrite sym $ appendAssociative ls [A] [B] in snd $ consInjective eq in
+                                  absurd $ not_s_end_a ls rewrite u in sw
+  Right $ Right (w ** v ** sw ** sv ** eq) => case list_splits (l::ls) [A, B] w v eq of
+    Left (m ** (lls_wm, v_mAB)) => rewrite lls_wm in
+                                   Ss sw $ the (S m) rewrite sym $ appendNilRightNeutral m in
+                                             assert_total {-assert_smaller s sv-} s_can_elim_ab m [] rewrite sym v_mAB in sv
+    Right (m ** (w_llsm, aB_mv)) => case m of
+      [] => let u = fst $ snocInjective {xs=l::ls++[A]} {x=B} {ys=w++[A]} {y=B}
+                      rewrite sym $ appendAssociative w [A] [B] in
+                      rewrite aB_mv in
+                      rewrite sym $ appendAssociative ls [A] [B] in
+                      eq in
+            rewrite fst $ snocInjective {xs=l::ls} u in sw
+      A::m'::ms' => let (_, v_n) = append_is_nil _ _ $ sym $ snd $ consInjective $ snd $ consInjective aB_mv in
+                    rewrite sym $ appendNilRightNeutral (l::ls) in
+                    assert_total {-assert_smaller s sw-} $ s_can_elim_ab (l::ls) []
+                      let u = the ([A, B] = A::m'::ms') $ rewrite sym $ appendNilRightNeutral ms' in rewrite sym v_n in aB_mv in
+                      rewrite cong (ls ++) u in
+                      rewrite sym w_llsm in
+                      sw
+s_can_elim_ab (l::ls) (r::rs) s = case analyze_s s of
+  Right $ Left (w ** sw ** eq) => rewrite init_last_decomp (r::rs) in
+                                  let (eq_l, eqL) = consInjective eq in
+                                  let (eq_r, eqR) = snocInjective {xs=ls ++ A::B::init (r::rs)} {x=last $ r::rs} {y=B}
+                                                      rewrite sym $ appendAssociative ls (init $ A::B::r::rs) [last $ A::B::r::rs] in
+                                                      rewrite sym $ init_last_decomp $ A::B::r::rs in
+                                                      eqL in
+                                  rewrite eq_l in
+                                  rewrite eqR in
+                                  rewrite appendAssociative ls (init $ r::rs) [B] in
+                                  Asb $ s_can_elim_ab ls (init $ r::rs) rewrite eq_r in sw
+  Right $ Right (w ** v ** sw ** sv ** eq) => case list_splits (l::ls) (A::B::r::rs) w v eq of
+    Left (m ** (lls_wm, w_ABrrs)) => rewrite cong (++ r::rs) lls_wm in
+                                     rewrite sym $ appendAssociative w m (r::rs) in
+                                     Ss sw $ assert_total {-assert_smaller s sv-} $ s_can_elim_ab m (r::rs) rewrite sym w_ABrrs in sv
+    Right (m ** (w_llsm, aBrrs_mv)) => case m of
+      [] => rewrite cong (++ r::rs) $ the (l::ls=w) rewrite sym $ appendNilRightNeutral ls in sym w_llsm in
+            Ss sw $ s_can_elim_ab (assert_smaller (l::ls) []) (r::rs) rewrite aBrrs_mv in sv
+      A::B::m' => rewrite snd $ consInjective $ snd $ consInjective aBrrs_mv in
+                  rewrite appendAssociative (l::ls) m' v in
+                  flip Ss sv $ s_can_elim_ab (l::ls) (assert_smaller (r::rs) m') rewrite sym w_llsm in sw
+      A::A::_ => case fst $ consInjective $ snd $ consInjective aBrrs_mv of Refl impossible
 
 balanced_appended : (n : Nat) -> (l, r : List Alpha) -> balanced n l = True -> balanced 0 r = True -> balanced n (l ++ r) = True
 balanced_appended 0      []    _ _   prf = prf
